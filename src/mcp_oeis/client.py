@@ -59,29 +59,33 @@ class OEISClient:
     def search_by_name(self, query: str, max_results: int = 10) -> list[SearchResult]:
         if not query.strip():
             raise ValueError("Search query cannot be empty")
+        if max_results < 1:
+            raise ValueError("max_results must be positive")
 
         self._rate_limit()
         url = f"{OEIS_BASE_URL}/search"
-        params = {"fmt": "text", "q": query, "max": str(max_results)}
+        params = {"fmt": "text", "q": query, "n": str(max_results)}
         response = self._client.get(url, params=params)
         response.raise_for_status()
 
-        return self._parse_search_results(response.text)
+        return self._parse_search_results(response.text)[:max_results]
 
     def search_by_terms(
         self, terms: list[int], max_results: int = 10
     ) -> list[SearchResult]:
         if not terms:
             raise ValueError("Search terms cannot be empty")
+        if max_results < 1:
+            raise ValueError("max_results must be positive")
 
         self._rate_limit()
         terms_str = ",".join(str(t) for t in terms)
         url = f"{OEIS_BASE_URL}/search"
-        params = {"fmt": "text", "q": terms_str, "max": str(max_results)}
+        params = {"fmt": "text", "q": terms_str, "n": str(max_results)}
         response = self._client.get(url, params=params)
         response.raise_for_status()
 
-        return self._parse_search_results(response.text)
+        return self._parse_search_results(response.text)[:max_results]
 
     def _parse_sequence_response(self, text: str, target_id: str) -> SequenceData:
         lines = text.strip().split("\n")
